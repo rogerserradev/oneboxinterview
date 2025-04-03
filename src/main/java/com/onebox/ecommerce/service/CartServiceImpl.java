@@ -67,11 +67,6 @@ public class CartServiceImpl implements CartService{
 
         log.info("Products were successfully added to Cart with cartId: {} ", cartId);
 
-
-        // check if product is already present?
-        // check if duplicated items in the product list?
-        // check if duplicated id?
-
         CartResponse cartResponse = new CartResponse();
         BeanUtils.copyProperties(cart, cartResponse);
 
