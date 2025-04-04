@@ -12,9 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -30,7 +29,7 @@ public class CartServiceImplTest {
     CartService cartService = new CartServiceImpl();
 
     Cart cart;
-    private List<Product> products;
+    private Map<Integer, Product> products;
 
     @BeforeEach
     void setUp() {
@@ -39,12 +38,16 @@ public class CartServiceImplTest {
         Product product1 = new Product(1, "Final Fantasy 7", 1);
         Product product2 = new Product(2, "Elden Ring", 1);
         Product product3 = new Product(3, "Persona 5", 1);
-        products = Arrays.asList(product1, product2, product3);
+        // Using a map instead of list
+        products = new HashMap<>();
+        products.put(1, product1);
+        products.put(2, product2);
+        products.put(3, product3);
     }
 
     @Test
     @DisplayName("Create New Cart")
-    void testCreateCart(){
+    void testCreateCart() {
         // Mocking
         when(cartRepository.createCart())
                 .thenReturn(cart);
@@ -55,12 +58,11 @@ public class CartServiceImplTest {
         // Assert
         assertNotNull(actualCart);
         assertEquals(actualCart.getId(), cart.getId());
-
     }
 
     @Test
     @DisplayName("Get Cart - Success Scenario")
-    void testGetCartSuccess(){
+    void testGetCartSuccess() {
         // Mocking
         when(cartRepository.getCart(anyInt()))
                 .thenReturn(cart);
@@ -75,7 +77,7 @@ public class CartServiceImplTest {
 
     @Test
     @DisplayName("Add Products to Cart - Success Scenario")
-    void addProductsToCart(){
+    void addProductsToCart() {
         // Mocking
         when(cartRepository.getCart(anyInt()))
                 .thenReturn(cart);
@@ -86,15 +88,15 @@ public class CartServiceImplTest {
         // Assert
         assertNotNull(cartResponse);
         assertEquals(cart.getId(), cartResponse.getId());
-        assertEquals(3, cartResponse.getProducts().size());
-        assertTrue(cartResponse.getProducts().containsKey(1));
-        assertTrue(cartResponse.getProducts().containsKey(2));
-        assertTrue(cartResponse.getProducts().containsKey(3));
+        assertEquals(3, cartResponse.getProducts().size());  // Map size assertion
+        assertTrue(cartResponse.getProducts().containsKey(1));  // Check if the Map contains the product with id 1
+        assertTrue(cartResponse.getProducts().containsKey(2));  // Check if the Map contains the product with id 2
+        assertTrue(cartResponse.getProducts().containsKey(3));  // Check if the Map contains the product with id 3
     }
 
     @Test
     @DisplayName("Add Products to Cart - Exception Scenario")
-    void addProductsToNonExistentCart(){
+    void addProductsToNonExistentCart() {
         int mockCartId = 3;
         // Mocking
         when(cartRepository.getCart(mockCartId))
@@ -110,7 +112,7 @@ public class CartServiceImplTest {
 
     @Test
     @DisplayName("Delete Cart Scenario")
-    void testDeleteCart(){
+    void testDeleteCart() {
         // Actual
         cartRepository.deleteCart(cart.getId());
         // Verification

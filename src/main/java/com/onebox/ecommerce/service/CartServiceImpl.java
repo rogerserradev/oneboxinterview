@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -54,14 +55,14 @@ public class CartServiceImpl implements CartService{
     }
 
     @Override
-    public CartResponse addProductsToCart(int cartId, List<Product> products) {
+    public CartResponse addProductsToCart(int cartId, Map<Integer, Product> products) {
         Cart cart = Optional.ofNullable(cartRepository.getCart(cartId))
                 .orElseThrow(() -> new CartServiceCustomException(
                         "Cart with given id: " + cartId + " was not found",
                         "CART_NOT_FOUND"));
 
-        products.forEach(product -> cart.getProducts()
-                        .put(product.getId(), product));
+        products.forEach((id, product) -> cart.getProducts()
+                        .put(id, product));
 
         cart.updateInstant();
 
