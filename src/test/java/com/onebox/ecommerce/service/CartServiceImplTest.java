@@ -1,5 +1,6 @@
 package com.onebox.ecommerce.service;
 
+import com.onebox.ecommerce.exception.CartServiceCustomException;
 import com.onebox.ecommerce.model.Cart;
 import com.onebox.ecommerce.model.CartResponse;
 import com.onebox.ecommerce.model.Product;
@@ -73,7 +74,7 @@ public class CartServiceImplTest {
     }
 
     @Test
-    @DisplayName("Add Products to Cart - Sucess Scenario")
+    @DisplayName("Add Products to Cart - Success Scenario")
     void addProductsToCart(){
         // Mocking
         when(cartRepository.getCart(anyInt()))
@@ -89,6 +90,22 @@ public class CartServiceImplTest {
         assertTrue(cartResponse.getProducts().containsKey(1));
         assertTrue(cartResponse.getProducts().containsKey(2));
         assertTrue(cartResponse.getProducts().containsKey(3));
+    }
+
+    @Test
+    @DisplayName("Add Products to Cart - Exception Scenario")
+    void addProductsToNonExistentCart(){
+        int mockCartId = 3;
+        // Mocking
+        when(cartRepository.getCart(mockCartId))
+                .thenReturn(null);
+        // Actual
+        CartServiceCustomException exception = assertThrows(CartServiceCustomException.class, () ->
+                cartService.addProductsToCart(mockCartId, products));
+        // Verification
+        verify(cartRepository, times(1)).getCart(mockCartId);
+        // Assert
+        assertEquals("Cart with given id: " + mockCartId + " was not found", exception.getMessage());
     }
 
     @Test
