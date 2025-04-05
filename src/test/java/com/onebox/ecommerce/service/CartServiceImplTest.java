@@ -5,7 +5,6 @@ import com.onebox.ecommerce.model.Cart;
 import com.onebox.ecommerce.model.CartResponse;
 import com.onebox.ecommerce.model.Product;
 import com.onebox.ecommerce.repository.CartRepository;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,9 +13,7 @@ import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -129,28 +126,44 @@ public class CartServiceImplTest {
 
     @Test
     @DisplayName("Delete inactive carts - Success Scenario, cart with 10+ minutes of inactivity")
-    void testDeleteInactiveCarts(){
+    void testDeleteInactiveCarts() {
         // Mock
-        Map<Integer, Cart> carts = getInactiveCart();
+        int inactivitySeconds = 1200;
+        Map<Integer, Cart> carts = getCartByInactivity(inactivitySeconds);
         when(cartRepository.getCarts()).thenReturn(carts);
 
         // Actual
         cartService.deleteInactiveCarts();
 
         // Verify
-        int idKey = 1;
-        verify(cartRepository, times(1)).deleteCart(idKey);
+        int key = carts.keySet().iterator().next(); // we get idKey = 2 because @BeforeEach cart always has id = 1
+        verify(cartRepository, times(1)).deleteCart(key);
 
     }
 
-    private Map<Integer, Cart> getInactiveCart(){
-        Map <Integer, Cart> inactiveHashmapCart = new HashMap<>();
+    @Test
+    @DisplayName("Delete inactive carts - Exception Scenario, cart with -10 minutes of inactivity")
+    void testDeleteActiveCarts() {
+        // Mock
+        int inactivitySeconds = 100;
+        Map<Integer, Cart> carts = getCartByInactivity(inactivitySeconds);
+        when(cartRepository.getCarts()).thenReturn(carts);
+
+        // Actual
+        cartService.deleteInactiveCarts();
+
+        // Verify
+        int key = carts.keySet().iterator().next(); // we get idKey = 2 because @BeforeEach cart always has id = 1
+        verify(cartRepository, never()).deleteCart(key);
+
+    }
+
+    private Map<Integer, Cart> getCartByInactivity(int seconds) {
+        Map<Integer, Cart> inactiveHashmapCart = new HashMap<>();
         Cart inactiveCart = new Cart();
-        int idKey = 1;
-        // Explicitly set the ID to 1, because AtomicInteger might interfere
-        inactiveCart.setId(idKey);  // Set ID manually to 1
-        inactiveCart.setLastUpdated(Instant.now().minusSeconds(1200)); // 20 minutes ago
-        inactiveHashmapCart.put(idKey, inactiveCart);
+        inactiveCart.setLastUpdated(Instant.now().minusSeconds(seconds)); // 20 minutes ago
+        inactiveHashmapCart.put(inactiveCart.getId(), inactiveCart);
         return inactiveHashmapCart;
     }
+
 }
