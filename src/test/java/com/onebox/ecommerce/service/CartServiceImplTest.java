@@ -5,6 +5,7 @@ import com.onebox.ecommerce.model.Cart;
 import com.onebox.ecommerce.model.CartResponse;
 import com.onebox.ecommerce.model.Product;
 import com.onebox.ecommerce.repository.CartRepository;
+import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -118,9 +122,35 @@ public class CartServiceImplTest {
                 .thenReturn(cart);
         // Actual
         CartResponse cartResponse = cartService.getCart(cart.getId());
-        // Actual
         cartRepository.deleteCart(cartResponse.getId());
         // Verification
         verify(cartRepository, times(1)).deleteCart(cart.getId());
+    }
+
+    @Test
+    @DisplayName("Delete inactive carts - Success Scenario, cart with 10+ minutes of inactivity")
+    void testDeleteInactiveCarts(){
+        // Mock
+        Map<Integer, Cart> carts = getInactiveCart();
+        when(cartRepository.getCarts()).thenReturn(carts);
+
+        // Actual
+        cartService.deleteInactiveCarts();
+
+        // Verify
+        int idKey = 1;
+        verify(cartRepository, times(1)).deleteCart(idKey);
+
+    }
+
+    private Map<Integer, Cart> getInactiveCart(){
+        Map <Integer, Cart> inactiveHashmapCart = new HashMap<>();
+        Cart inactiveCart = new Cart();
+        int idKey = 1;
+        // Explicitly set the ID to 1, because AtomicInteger might interfere
+        inactiveCart.setId(idKey);  // Set ID manually to 1
+        inactiveCart.setLastUpdated(Instant.now().minusSeconds(1200)); // 20 minutes ago
+        inactiveHashmapCart.put(idKey, inactiveCart);
+        return inactiveHashmapCart;
     }
 }

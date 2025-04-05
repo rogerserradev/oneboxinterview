@@ -8,15 +8,22 @@ import com.onebox.ecommerce.repository.CartRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
 public class CartServiceImpl implements CartService{
+
+    private static final int MINUTES = 10;
+    private static final int SECONDS = 60;
+    private static final int INACTIVITY_MILLISECONDS = MINUTES * SECONDS * 1000;
 
     @Autowired
     private CartRepository cartRepository;
@@ -87,4 +94,25 @@ public class CartServiceImpl implements CartService{
 
         log.info("Cart with cartId: {} was deleted", cartId);
     }
+
+    @Override
+    // We need to enable Scheduling in the Main.java file
+    @Scheduled(fixedRate = INACTIVITY_MILLISECONDS)
+    public void deleteInactiveCarts(){
+        Instant now = Instant.now();
+
+        // Find carts with 10+ minutes of inactivity
+        Map<Integer, Cart> inactiveCarts = cartRepository.getCarts().entrySet().stream()
+                .filter(entry ->
+                        Duration.between(entry.getValue().getLastUpdated(), now).toMinutes() >= MINUTES)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // Delete inactive carts
+        for (Map.Entry<Integer, Cart> entry : inactiveCarts.entrySet()) {
+            Cart cart = entry.getValue();
+            cartRepository.deleteCart(cart.getId());
+            log.info("Cart with cartId: {} was deleted due to inactivity", cart.getId());
+        }
+    }
+
 }
