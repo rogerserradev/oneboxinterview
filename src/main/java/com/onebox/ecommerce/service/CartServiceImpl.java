@@ -76,7 +76,15 @@ public class CartServiceImpl implements CartService{
 
     @Override
     public void deleteCart(int cartId) {
-        cartRepository.deleteCart(cartId);
+        log.info("Trying to delete Cart with cartId: {} ", cartId);
+
+        Cart cart = Optional.ofNullable(cartRepository.getCart(cartId))
+                .orElseThrow(() -> new CartServiceCustomException(
+                        "Cart with given id: " + cartId + " was not found",
+                        "CART_NOT_FOUND"));
+
+        cartRepository.deleteCart(cart.getId());
+
         log.info("Cart with cartId: {} was deleted", cartId);
     }
 }

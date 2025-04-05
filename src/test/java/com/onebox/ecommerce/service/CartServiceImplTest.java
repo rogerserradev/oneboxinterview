@@ -113,8 +113,13 @@ public class CartServiceImplTest {
     @Test
     @DisplayName("Delete Cart Scenario")
     void testDeleteCart() {
+        // Mocking
+        when(cartRepository.getCart(anyInt()))
+                .thenReturn(cart);
         // Actual
-        cartRepository.deleteCart(cart.getId());
+        CartResponse cartResponse = cartService.getCart(cart.getId());
+        // Actual
+        cartRepository.deleteCart(cartResponse.getId());
         // Verification
         verify(cartRepository, times(1)).deleteCart(cart.getId());
     }
